@@ -1,0 +1,25 @@
+# Dataset (SkyView Aerial Landscape, ~355 MB) - see data/README.md
+data/*
+!data/README.md
+
+# Model weights (run outputs in runs/ other than weights are versioned)
+*.pth
+*.pt
+*.pkl
+*.db
+
+# LaTeX build (the compiled paper/aerial_scene_classification.pdf is versioned)
+paper/build/
+*.aux
+*.log
+*.out
+*.bbl
+*.blg
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+
+.DS_Store
+__pycache__/
+.ipynb_checkpoints/
+.venv

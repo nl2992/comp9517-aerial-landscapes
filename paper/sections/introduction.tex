@@ -1,0 +1,32 @@
+\section{Introduction}
+\label{sec:intro}
+
+Aerial scene classification assigns a land-use or land-cover label, such as \emph{Port}, \emph{Railway} or \emph{River}, to an overhead image, and it underpins many mapping and monitoring tasks.
+Two things make it hard.
+Classes that share colour and texture must be told apart: on the SkyView data used here, a hand-crafted pipeline most often mistakes \emph{Highway} for \emph{Railway} and \emph{Lake} for \emph{River}.
+And real collections are rarely balanced, so some classes come with far fewer training images than others~\cite{he2009imbalanced}.
+
+The usual comparison pits two families of methods against each other.
+Hand-crafted pipelines summarise an image with colour, texture or keypoint statistics and train a shallow classifier on top~\cite{swain1991color,ojala2002lbp,lowe2004sift,yang2010bovw}, while ImageNet-pretrained CNNs are fine-tuned end to end~\cite{nogueira2017towards,pires2020transfer}.
+Ensembles are often suggested as a way to get the best of both~\cite{dietterich2000ensemble,sagi2018ensemble}, and augmentation or loss re-weighting is the standard response to imbalance~\cite{buda2018imbalance,zhang2023longtail}.
+These comparisons are easy to get wrong, though.
+If each method is tuned on its own split, or hyperparameters are chosen on the test images, a results table no longer separates the effect of the method from the effect of the protocol.
+
+We ran into exactly this problem.
+An earlier version of this study, a course project, tuned on the test set, mixed numbers from different splits, and broke voting ties by member order.
+That last choice is subtle: with two voters every disagreement is a tie, so a vote that favours the first-listed member simply returns that member's predictions.
+The ensembles looked as if they collapsed to their weakest member when in fact they were never combining anything.
+
+This paper repeats the comparison under a protocol designed to avoid these traps.
+We hold out one balanced test set and one balanced validation set, and derive three training sets from the remaining images that differ only in class distribution: balanced, long-tailed with an imbalance ratio of 16, and rebalanced by augmenting the minority classes (\cref{sec:protocol}).
+Every hyperparameter and stopping epoch is chosen on the validation set.
+On each training set we train four hand-crafted pipelines and two CNNs, \rn and \eb, the latter with a linear-probe-then-fine-tune schedule (\cref{sec:methods}), and we combine them by soft voting and by hard voting with a probability-based tie-break.
+All comparisons are made on the same 2{,}400 test images, with bootstrap confidence intervals and paired McNemar tests.
+
+Our contributions are:
+\begin{itemize}
+  \item a controlled protocol and re-implementation for comparing hand-crafted features, fine-tuned CNNs, ensembles and rebalancing strategies on SkyView (\cref{sec:protocol,sec:methods});
+  \item measurements of how far apart the two families are on balanced data and how much each loses under a 16:1 long tail, broken down by head, middle and tail classes (\cref{sec:res_base,sec:res_imbalance});
+  \item evidence that averaging the two CNNs significantly improves on either network in all three settings while adding hand-crafted members does not, together with a diagnosis of the tie-breaking pitfall (\cref{sec:ensembles,sec:res_ensembles});
+  \item a comparison of minority-class augmentation with inverse-frequency loss weighting, which shows that augmentation helps the hand-crafted pipelines but not the CNNs (\cref{sec:res_imbalance}).
+\end{itemize}

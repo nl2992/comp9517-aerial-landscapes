@@ -1,0 +1,29 @@
+\section{Discussion}
+\label{sec:discussion}
+
+\hi{Why the CNN pair helps and mixed ensembles do not.}
+A vote can only fix an error if enough members get that image right.
+The two CNNs are both accurate, and although their $Q$ is high they still disagree on a fair number of images (57 and 51 one-sided errors on the balanced set), so averaging settles most disagreements in favour of the right class.
+A hand-crafted member is diverse in the wrong way.
+It is wrong on many images the CNNs already handle, so in a pair it can only pull the stronger model down, and in a larger vote it can outvote it.
+This fits the familiar view that ensemble members need to be both accurate and diverse~\cite{dietterich2000ensemble,kuncheva2003diversity}; here the accuracy gap between the families outweighs whatever the weak members add.
+A combiner learned on validation predictions might exploit the high oracle accuracy, but we have not tried one.
+
+\hi{Why augmentation hurts the CNNs.}
+To bring every class to 544 images, the rebalanced set generates up to 15 copies of each real tail image; \emph{River}, for example, has 34 real images and 510 synthetic ones.
+The hand-crafted descriptors are histograms that barely change under rotation and mild photometric jitter, so for them the copies mostly correct the class prior.
+For the CNNs, one explanation consistent with our results is that they fit the repeated content of the few real tail images.
+Their tail recall drops below that of plain long-tailed training, whereas loss re-weighting, which shifts the prior without duplicating any content, improves both networks.
+The CNNs also apply random flips and rotations during training in every setting, so the offline copies add less new variation for them than for the hand-crafted pipelines.
+We did not try smaller augmentation budgets, and we evaluated the weighted loss for the CNNs only.
+
+\hi{The tie-breaking pitfall.}
+The earlier version of this study broke voting ties by member order.
+Every two-member ensemble therefore matched its first member exactly, which made it look as though ensembles ``collapse to their weakest member''.
+Nothing of the sort was happening; with two voters every disagreement is a tie, and the rule decided all of them the same way.
+Any hard vote with an even number of members needs an explicit tie-break, and soft voting sidesteps the problem.
+
+\hi{Limitations.}
+All results come from one dataset with $256\times256$ images and 15 classes, a single (alphabetical) long-tail ordering, and one training run per configuration, so the bootstrap intervals do not capture training variance.
+We fine-tuned \eb at $224\times224$ rather than its native $300\times300$ and unfroze only its last stage, which may understate it relative to the fully fine-tuned \rn.
+The Grad-CAM analysis is qualitative and covers a single confusion.

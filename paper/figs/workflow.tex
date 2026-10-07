@@ -1,0 +1,48 @@
+% Experimental workflow (Fig. 1). Fill colours follow the reference categorical palette.
+\definecolor{wfblue}{HTML}{2A78D6}
+\definecolor{wforange}{HTML}{EB6834}
+\definecolor{wfaqua}{HTML}{1BAF7A}
+\definecolor{wfink}{HTML}{52514E}
+\begin{tikzpicture}[
+    font=\scriptsize, >=Stealth, node distance=1.6mm,
+    box/.style={draw=wfink, rounded corners=1.5pt, line width=0.4pt, align=center, inner sep=1.5pt,
+                minimum height=7mm, text width=#1},
+    box/.default=18mm,
+    grp/.style={draw=wfink!60, dashed, rounded corners=2pt, inner sep=2mm},
+    gl/.style={font=\scriptsize\bfseries, text=wfink, anchor=base, yshift=1.2mm},
+    arr/.style={->, wfink, line width=0.5pt}
+  ]
+  % 1. Splits
+  \node[box=16mm] (pool) {Train pool\\544 / class};
+  \node[box=16mm, below=of pool] (val) {Validation\\96 / class};
+  \node[box=16mm, below=of val] (test) {Test\\160 / class};
+  \node[grp, fit=(pool)(val)(test)] (G1) {};
+  \node[gl] at (G1.north) {SkyView split};
+
+  % 2. Training sets
+  \node[box=18mm, right=7mm of pool, fill=wfblue!12] (bal) {Balanced\\544 / class};
+  \node[box=18mm, below=of bal, fill=wforange!12] (lt) {Long-tailed\\544 $\to$ 34 / class};
+  \node[box=18mm, below=of lt, fill=wfaqua!12] (rb) {Rebalanced\\LT + augmentation};
+  \node[grp, fit=(bal)(lt)(rb)(bal |- G1.north)(rb |- G1.south), inner sep=0pt] (G2) {};
+  \node[gl] at (G2.north) {Training sets};
+
+  % 3. Models
+  \node[box=21mm, right=7mm of bal] (hc) {Hand-crafted\\LBP / colour / SIFT};
+  \node[box=21mm, below=of hc] (cnn) {CNNs\\ResNet-18, EffNet-B3};
+  \node[box=21mm, below=of cnn] (ens) {Ensembles\\hard / soft vote};
+  \node[grp, fit=(hc)(cnn)(ens)(hc |- G1.north)(ens |- G1.south), inner sep=0pt] (G3) {};
+  \node[gl] at (G3.north) {Models};
+
+  % 4. Evaluation
+  \node[box=17mm, right=7mm of cnn, minimum height=23.4mm] (ev)
+    {on the test set:\\[2pt]accuracy\\macro-F1 (CI)\\McNemar test\\per-class recall\\$Q$-statistic\\Grad-CAM};
+  \node[grp, fit=(ev)(ev |- G3.north)(ev |- G3.south), inner sep=0pt] (G4) {};
+  \node[gl] at (G4.north) {Test evaluation};
+
+  \draw[arr] (pool.east) -- (G2.west |- pool);
+  \draw[arr] (lt) -- (rb);
+  \draw[arr] (G2.east |- lt) -- (G3.west |- cnn);
+  \draw[arr] (G3.east |- cnn) -- (G4.west |- cnn);
+  \draw[arr, dashed] (val.east) -- ++(2mm,0) |- ([yshift=-3mm]G2.south) -| node[pos=0.25, below=0.2mm, font=\tiny, text=wfink] {model selection: hyperparameters, early stopping} (G3.south);
+  \draw[arr, dashed] (test.east) -- ++(1mm,0) |- ([yshift=-7.5mm]G2.south) -| node[pos=0.25, below=0.2mm, font=\tiny, text=wfink] {scored once per model} (G4.south);
+\end{tikzpicture}

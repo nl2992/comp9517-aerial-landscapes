@@ -1,0 +1,8 @@
+\section{Conclusion}
+\label{sec:conclusion}
+
+We have compared hand-crafted pipelines, fine-tuned CNNs and their ensembles on SkyView, holding the test set, the validation signal and the training pool fixed and varying only the class distribution.
+The CNNs beat the best hand-crafted pipeline by about 12 points on balanced data and lose much less under a 16:1 long tail.
+For the CNNs, re-weighting the loss was the better answer to imbalance; augmenting the minority classes helped only the hand-crafted pipelines.
+Averaging the two CNNs gave the best result in every setting, while voting with much weaker models did not, and a two-member hard vote is only meaningful with an explicit tie-break.
+The obvious next steps are to repeat the study over several seeds and long-tail orderings, to try a combiner learned on validation predictions, and to check whether the findings carry over to larger benchmarks such as AID and NWPU-RESISC45~\cite{xia2017aid,cheng2017remote}.

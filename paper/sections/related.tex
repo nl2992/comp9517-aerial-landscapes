@@ -1,0 +1,29 @@
+\section{Related Work}
+\label{sec:related}
+
+\hi{Hand-crafted descriptors.}
+Before learned features, aerial scene classification relied on global and local image statistics.
+Colour histograms~\cite{swain1991color} summarise the chromatic distribution of an image and are invariant to rotation and translation, but scenes that share a palette, such as beaches and deserts, become hard to separate.
+Local binary patterns (LBP)~\cite{ojala2002lbp} encode micro-texture in a gray-scale and rotation invariant way, and SIFT~\cite{lowe2004sift} keypoints quantised into a bag of visual words (BoW) capture local structure; Yang and Newsam~\cite{yang2010bovw} applied BoW with spatial extensions to land-use classification.
+Such descriptors are typically paired with support vector machines (SVMs)~\cite{cortes1995svm} or nearest-neighbour rules~\cite{cover1967nn}.
+Larger benchmarks such as NWPU-RESISC45~\cite{cheng2017remote} and AID~\cite{xia2017aid} were introduced because accuracy on earlier, smaller datasets had saturated; both papers review hand-crafted and deep methods side by side.
+
+\hi{Transfer learning with CNNs.}
+Convolutional networks pre-trained on ImageNet~\cite{deng2009imagenet} are the default starting point for remote sensing scenes.
+Nogueira et~al.~\cite{nogueira2017towards} compared full training, fine-tuning and fixed feature extraction on three remote sensing datasets and found fine-tuning to be the strongest strategy, and Pires de Lima and Marfurt~\cite{pires2020transfer} reviewed transfer learning for scene classification across datasets and architectures.
+Kornblith et~al.~\cite{kornblith2019transfer} reported a strong correlation between ImageNet accuracy and transfer accuracy over 12 datasets.
+We use residual networks~\cite{he2016resnet} and compound-scaled EfficientNets~\cite{tan2019efficientnet} as two backbones of different capacity under one training recipe.
+
+\hi{Ensembles and diversity.}
+Combining classifiers reduces error when the members are accurate and err on different inputs~\cite{dietterich2000ensemble,rokach2010ensemble,sagi2018ensemble}.
+Stacking~\cite{wolpert1992stacked} learns the combination with a meta-classifier, whereas voting uses a fixed rule; averaging the predictions of independently trained networks is a common deep-learning practice~\cite{lakshminarayanan2017deep,hinton2015distilling}.
+Kuncheva and Whitaker~\cite{kuncheva2003diversity} studied how measures of diversity relate to ensemble accuracy; we use one such pairwise measure, Yule's $Q$-statistic, to explain when our ensembles help.
+
+\hi{Class imbalance.}
+Imbalanced training data degrade classifiers~\cite{he2009imbalanced}, and Buda et~al.~\cite{buda2018imbalance} found the effect to be detrimental for CNNs on MNIST, CIFAR-10 and ImageNet.
+Remedies include re-sampling, cost-sensitive losses such as the class-balanced~\cite{cui2019classbalanced} and focal~\cite{lin2017focal} losses, and data augmentation~\cite{shorten2019augmentation}; Zhang et~al.~\cite{zhang2023longtail} survey them for deep long-tailed learning.
+We compare offline augmentation of minority classes with inverse-frequency loss weighting on a controlled long-tailed split.
+
+\hi{Explainability.}
+Grad-CAM~\cite{selvaraju2017gradcam} localises the image regions that drive a prediction by weighting the last convolutional feature maps with class-specific gradients.
+We use it to inspect the most frequent confusion of each network.

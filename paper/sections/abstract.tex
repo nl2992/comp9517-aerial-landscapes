@@ -1,0 +1,14 @@
+\begin{abstract}
+Aerial scene classifiers have to tell apart land-use classes that look alike, and they are usually trained on collections where some classes are rare.
+We revisit a standard comparison on the 15-class SkyView dataset: hand-crafted pipelines (local binary patterns, colour histograms and SIFT bag-of-words with $k$-nearest-neighbour, SVM and stacking classifiers) against fine-tuned ResNet-18 and EfficientNet-B3, plus voting ensembles of both.
+Every model is tuned on the same validation set and scored on the same balanced test set, and we train on three sets that differ only in their class distribution: balanced, long-tailed (16:1) and rebalanced by offline augmentation.
+With balanced training the CNNs reach 96.2\% and 96.5\% macro-F1, against 84.4\% for the best hand-crafted pipeline.
+The long tail costs the CNNs 2.4--4.0 points and the hand-crafted pipelines 9--13; stacking recognises only 2.5\% of the rarest class.
+Rebalancing by augmentation helps the hand-crafted pipelines but lowers both CNNs by 1.1--1.7 points, while weighting the loss by inverse class frequency raises them by 0.9--1.2.
+Averaging the two CNNs beats the better network in every setting (98.0\% macro-F1 on balanced data, McNemar $p<10^{-4}$); adding hand-crafted members does not help.
+Finally, we show that breaking voting ties by member order turns any two-member majority vote into a copy of its first member, which is why these ensembles previously appeared to collapse.
+\end{abstract}
+
+\begin{IEEEkeywords}
+aerial scene classification, remote sensing, transfer learning, class imbalance, ensemble learning, Grad-CAM
+\end{IEEEkeywords}

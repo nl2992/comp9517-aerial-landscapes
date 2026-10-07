@@ -1,0 +1,55 @@
+\section{Data and Evaluation Protocol}
+\label{sec:protocol}
+
+\Cref{fig:workflow} summarises the study.
+All models, in every setting, share one split, one model-selection rule and one test set, so that differences between rows of a table can be attributed to the model or to the training distribution and not to the evaluation.
+
+\begin{figure}[t]
+  \centering
+  \resizebox{\columnwidth}{!}{\input{figs/workflow}}
+  \caption{Experimental workflow. A fixed balanced test set and a fixed balanced validation set are held out once; three training sets are derived from the remaining images. Every hyperparameter and early-stopping decision uses the validation set only (dashed), and the test set is scored once per model.}
+  \label{fig:workflow}
+\end{figure}
+
+\subsection{Dataset and splits}
+We use the SkyView aerial landscape dataset~\cite{skyview}: 12{,}000 RGB images of $256\times256$ pixels, 800 per class, in 15 classes (Agriculture, Airport, Beach, City, Desert, Forest, Grassland, Highway, Lake, Mountain, Parking, Port, Railway, Residential, River).
+We hold out a stratified test set of 160 images per class (2{,}400 images).
+From the remaining 640 images per class we draw a validation set of 96 images per class (1{,}440 images, seed~0), leaving a training pool of 544 images per class.
+We verified that no file appears in more than one split and that the test set contains no byte-identical copy of a training image.
+
+\subsection{Training distributions}
+\label{sec:settings}
+We derive three training sets from the pool (\cref{tab:settings}).
+
+\hi{Balanced:} all 8{,}160 pool images.
+
+\hi{Long-tailed:} class $i$ in alphabetical order keeps a fraction $r_i$ of its 544 pool images, with $r = (800, 700, 650, \ldots, 100, 50)/800$, i.e.\ from 544 images for Agriculture down to 34 for River.
+The imbalance ratio is 16 and the set has 4{,}114 images.
+
+\hi{Rebalanced:} the long-tailed set plus offline augmented copies of each minority class, generated only from that class's own long-tailed images, until every class has 544 images (4{,}046 synthetic images).
+Each copy applies a random rotation in $[-30^\circ, 30^\circ]$, Gaussian blur with radius in $[0.1, 2]$, and brightness, contrast and colour-saturation factors in $[0.8, 1.2]$.
+
+Validation and test sets stay balanced and identical in all settings.
+A balanced validation set makes model selection target macro-averaged performance and keeps selection noise identical across settings, so the long-tailed and rebalanced columns differ from the balanced column only in the training data.
+
+\begin{table}[t]
+  \centering
+  \caption{Training sets. Validation (96/class) and test (160/class) sets are shared and balanced.}
+  \label{tab:settings}
+  \begin{tabular}{@{}lrrr@{}}
+    \toprule
+    Setting & Images & Per class & Synthetic \\
+    \midrule
+    Balanced    & 8{,}160 & 544      & 0 \\
+    Long-tailed & 4{,}114 & 544--34  & 0 \\
+    Rebalanced  & 8{,}160 & 544      & 4{,}046 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Metrics and statistical testing}
+We report accuracy and macro-averaged F1 on the test set; on a balanced test set accuracy equals macro-recall.
+For imbalance we also report per-class recall and its mean over the five head, five middle and five tail classes of the long-tailed ordering.
+Uncertainty is quantified with 95\% percentile bootstrap intervals over test images (2{,}000 resamples).
+Paired comparisons between two classifiers on the same test images use the exact McNemar test~\cite{dietterich1998tests}, and we call a difference significant at $p<0.05$.
+All results come from a single training run per configuration (seed~0); the bootstrap intervals capture test-sampling variability but not training variability.

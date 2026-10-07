@@ -1,0 +1,28 @@
+{
+ "true": "Railway",
+ "pred": "Airport",
+ "count": 9,
+ "b3_same_confusion": 7,
+ "examples": [
+  {
+   "path": "data/Aerial_Landscapes_Test/Railway/003.jpg",
+   "r18": "Railway",
+   "b3": "Railway"
+  },
+  {
+   "path": "data/Aerial_Landscapes_Test/Railway/092.jpg",
+   "r18": "Airport",
+   "b3": "Railway"
+  },
+  {
+   "path": "data/Aerial_Landscapes_Test/Railway/131.jpg",
+   "r18": "Airport",
+   "b3": "City"
+  },
+  {
+   "path": "data/Aerial_Landscapes_Test/Railway/158.jpg",
+   "r18": "Airport",
+   "b3": "Airport"
+  }
+ ]
+}

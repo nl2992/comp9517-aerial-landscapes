@@ -1,0 +1,10 @@
+% Shared macros
+\newcommand{\rn}{ResNet-18\xspace}
+\newcommand{\eb}{EfficientNet-B3\xspace}
+\newcommand{\knn}{$k$NN\xspace}
+\newcommand{\pp}{\,pp\xspace}  % percentage points
+\newcommand{\hi}[1]{\vspace{.25em}\noindent\textbf{#1}}
+% Expandable input for generated table rows (plain \input breaks before \bottomrule)
+\makeatletter
+\newcommand{\inputrows}[1]{\@@input #1 }
+\makeatother

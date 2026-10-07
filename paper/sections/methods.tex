@@ -1,0 +1,48 @@
+\section{Methods}
+\label{sec:methods}
+
+All hyperparameters are chosen with Optuna~\cite{akiba2019optuna} using the tree-structured Parzen estimator~\cite{bergstra2011tpe}, maximising validation macro-F1; the selected configuration is then refitted on the training set and applied once to the test set.
+Classical models use scikit-learn~\cite{pedregosa2011sklearn} and CNNs use PyTorch~\cite{paszke2019pytorch}.
+
+\subsection{Hand-crafted pipelines}
+\label{sec:classical}
+We extract three descriptors from each $256\times256$ image.
+\emph{LBP}: uniform rotation-invariant patterns with $P{=}24$ neighbours at radius $R{=}3$ on the gray-scale image, giving a normalised 26-bin histogram~\cite{ojala2002lbp}.
+\emph{Colour}: a 32-bin histogram per RGB channel, each normalised to unit sum (96 dimensions)~\cite{swain1991color}.
+\emph{SIFT-BoW}: up to 300 SIFT descriptors per image~\cite{lowe2004sift}, quantised against a 100-word vocabulary learned with mini-batch $k$-means on $2\times10^5$ descriptors sampled from the training set of the current setting, giving a normalised 100-bin histogram.
+
+On these features we train four classifiers:
+(i)~\knn on LBP, tuning $k\in[1,30]$, uniform or distance weighting, and the Euclidean or Manhattan metric (30 trials);
+(ii)~an RBF-kernel SVM on standardised colour histograms, tuning $C\in[10^{-2},10^{3}]$ and $\gamma\in[10^{-4},1]$ (30 trials);
+(iii)~the same SVM on SIFT-BoW;
+(iv)~a stacking ensemble~\cite{wolpert1992stacked} on the standardised concatenation of all three descriptors (222 dimensions), whose base learners are an RBF SVM, a distance-weighted \knn and a decision tree, combined by a logistic-regression meta-learner trained on 5-fold out-of-fold base-learner outputs; we tune the SVM $C$, $k$ and the tree depth (15 trials).
+SVM probabilities for voting come from Platt scaling.
+
+\subsection{CNN transfer learning}
+\label{sec:cnn}
+We fine-tune ImageNet-pretrained \rn~\cite{he2016resnet} and \eb~\cite{tan2019efficientnet} at $224\times224$ input with ImageNet normalisation, using a two-stage linear-probe-then-fine-tune schedule.
+In stage~1 the backbone is frozen and a linear head (preceded by dropout~0.3 for \eb) is trained on cached pooled features for 15 epochs; Optuna selects its learning rate in $[10^{-5},10^{-2}]$ and weight decay $w$ in $[10^{-6},5\times10^{-3}]$ over 20 trials.
+In stage~2 we unfreeze all layers of \rn and, for \eb, the last MBConv stage and the final $1\times1$ convolution, keeping the remaining BatchNorm statistics fixed.
+Training uses Adam~\cite{kingma2015adam} with weight decay $w$, learning rate $10^{-4}$ for the backbone and $\min(\eta^\ast, 10^{-3})$ for the head, where $\eta^\ast$ is the stage-1 learning rate, cosine annealing~\cite{loshchilov2017sgdr} over at most 15 epochs, batches of 64, random horizontal flips and rotations in $[-15^\circ,15^\circ]$.
+We stop after 4 epochs without a validation macro-F1 gain and restore the best epoch.
+In the long-tailed setting we additionally train both networks with inverse-frequency weighted cross-entropy, $w_c = N/(K n_c)$ for $K$ classes and $n_c$ training images in class $c$, as a cost-sensitive alternative to augmentation~\cite{he2009imbalanced,cui2019classbalanced}.
+
+\subsection{Ensembles}
+\label{sec:ensembles}
+We combine base models with two fixed rules.
+\emph{Soft voting} averages the members' class-probability vectors and predicts the arg-max.
+\emph{Hard voting} predicts the class with the most member votes.
+With an even number of members ties are frequent; with two members every disagreement is a tie.
+If ties are broken by member order, a two-member hard vote reproduces its first member's prediction exactly, so we break ties by the summed probability of the tied classes.
+For each ensemble we also report the oracle accuracy, the fraction of test images that at least one member classifies correctly, as an upper bound on what any combiner could achieve.
+To relate ensemble gains to diversity we compute Yule's $Q$-statistic for each pair of classifiers~\cite{kuncheva2003diversity},
+\begin{equation}
+  Q_{ab} = \frac{N^{11}N^{00} - N^{10}N^{01}}{N^{11}N^{00} + N^{10}N^{01}},
+  \label{eq:q}
+\end{equation}
+where $N^{11}$ counts test images both classifiers get right, $N^{00}$ those both get wrong, and $N^{10}$, $N^{01}$ those only one gets right.
+$Q$ ranges from $-1$ to $1$; values near $1$ indicate that the two classifiers fail on the same images.
+
+\subsection{Grad-CAM}
+For both networks we compute Grad-CAM~\cite{selvaraju2017gradcam} maps from the last convolutional block (\texttt{layer4} for \rn, the final $1\times1$ convolution for \eb) with respect to the predicted class, upsampled to the input size.
+We visualise test images from the most frequent off-diagonal confusion of \rn.
